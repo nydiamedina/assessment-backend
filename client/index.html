@@ -5,7 +5,32 @@
   </head>
   <body class="container">
     <button id="complimentButton">Get a compliment</button>
+    <br><br>
     <button id="fortuneButton">Get fortune</button>
+    <br><br>
+    <form id="goals">
+      <label for="firstName">What's your name?</label>
+      <input type="text" id="firstName" name="firstName"><br><br>
+      <label for="dailyGoal">What do you want to accomplish today?</label>
+      <input type="text" id="dailyGoal" name="dailyGoal"><br><br>
+      <label for="weeklyGoal">What do you want to accomplish this week?</label>
+      <input type="text" id="weeklyGoal" name="weeklyGoal"><br><br>
+      <label for="monthlyGoal">What do you want to accomplish this month?</label>
+      <input type="text" id="monthlyGoal" name="monthlyGoal"><br><br>
+      <input type="submit" value="Submit goals">
+    </form>
+    <p id="goalMessage"></p>
+    <p id="goalListMessage"></p>
+    <ul id="goalList">
+    </ul>
+    <form id="updateWeeklyGoal">
+      <label for="newWeeklyGoal">What's your new weekly goal?</label>
+      <input type="text" id="newWeeklyGoal" name="newWeeklyGoal"><br><br>
+      <input type="submit" value="Update weekly goal">
+    </form>
+    <br>
+    <button id="removeGoalsButton">Remove goals</button>
+
 
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script>
@@ -17,6 +42,7 @@
             alert(data);
           });
       };
+
       document.getElementById("fortuneButton").onclick = function () {
         axios
           .get("http://localhost:4000/api/fortune/")
@@ -25,6 +51,109 @@
             alert(data);
           });
       };
-    </script>
+
+      function handleGoalsFormSubmit(evt) {
+        evt.preventDefault();
+
+        const userGoal = {
+          firstName: document.getElementById("firstName").value,
+          dailyGoal: document.getElementById("dailyGoal").value,
+          weeklyGoal: document.getElementById("weeklyGoal").value,
+          monthlyGoal: document.getElementById("monthlyGoal").value,
+        };
+
+        axios
+          .post("http://localhost:4000/api/goals/", userGoal)
+          .then(function (response) {
+            const goalList = document.getElementById("goalList");
+            goalList.innerHTML = "";
+
+            const goalMessage = document.getElementById("goalMessage");
+            goalMessage.textContent = response.data.message;
+
+            const goalListMessage = document.getElementById("goalListMessage");
+            goalListMessage.textContent = "Here's your list of goals:";
+            
+            let dailyGoal = document.createElement('li');
+            dailyGoal.appendChild(document.createTextNode(response.data.dailyGoal));
+
+            let weeklyGoal = document.createElement('li');
+            weeklyGoal.appendChild(document.createTextNode(response.data.weeklyGoal));
+
+            let monthlyGoal = document.createElement('li');
+            monthlyGoal.appendChild(document.createTextNode(response.data.monthlyGoal));
+
+            goalList.appendChild(dailyGoal);
+            goalList.appendChild(weeklyGoal);
+            goalList.appendChild(monthlyGoal);
+          });
+      };
+
+      let goalForm = document.querySelector('form#goals');
+      goalForm.addEventListener('submit', handleGoalsFormSubmit);
+
+      document.getElementById("removeGoalsButton").onclick = function () {
+        axios
+          .delete(`http://localhost:4000/api/goals/${document.getElementById("firstName").value}`)
+          .then(function (response) {
+            const data = response.data;
+            
+            const goalList = document.getElementById("goalList");
+            goalList.innerHTML = "";
+
+            const goalMessage = document.getElementById("goalMessage");
+            goalMessage.textContent = "";
+
+            const goalListMessage = document.getElementById("goalListMessage");
+            goalListMessage.textContent = "Your goals have been removed.";
+            
+            alert(data);
+          })
+         .catch(function (error) {
+            console.log(JSON.stringify(error));
+          }); 
+      };
+
+      function handleWeeklyGoalFormSubmit(evt) {
+        evt.preventDefault();
+
+        const userGoal = {
+          weeklyGoal: document.getElementById("newWeeklyGoal").value,
+        };
+
+        axios
+          .put(`http://localhost:4000/api/goals/${document.getElementById("firstName").value}/weekly`, userGoal)
+          .then(function (response) {
+            const goalList = document.getElementById("goalList");
+            goalList.innerHTML = "";
+
+            const goalListMessage = document.getElementById("goalListMessage");
+            goalListMessage.textContent = "Here's your updated list of goals:";
+
+            const goalMessage = document.getElementById("goalMessage");
+            goalMessage.textContent = "";
+            
+            let dailyGoal = document.createElement('li');
+            dailyGoal.appendChild(document.createTextNode(response.data.dailyGoal));
+
+            let weeklyGoal = document.createElement('li');
+            weeklyGoal.appendChild(document.createTextNode(response.data.weeklyGoal));
+
+            let monthlyGoal = document.createElement('li');
+            monthlyGoal.appendChild(document.createTextNode(response.data.monthlyGoal));
+
+            goalList.appendChild(dailyGoal);
+            goalList.appendChild(weeklyGoal);
+            goalList.appendChild(monthlyGoal);
+          })
+          .catch(function (error) {
+            console.log(JSON.stringify(error));
+          }); 
+      }
+
+      let weeklyGoalForm = document.querySelector('form#updateWeeklyGoal');
+      weeklyGoalForm.addEventListener('submit', handleWeeklyGoalFormSubmit);
+
+      </script>
   </body>
 </html>
